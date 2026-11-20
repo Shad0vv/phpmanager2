@@ -900,6 +900,7 @@ namespace Web.Management.PHP.Config
             // The version can have a suffix (like "7.4.33-pl3"). If it cannot be parsed
             // at all, the version specific extensions are left alone.
             var phpVersion = PHPVersionParser.ParsePhpVersion(version);
+            
             if (phpVersion != null && phpVersion < new Version("7.0"))
             {
                 // IMPORTANT: keep obsolete setting in old release.
