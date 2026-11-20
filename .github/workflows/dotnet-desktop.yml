@@ -69,3 +69,13 @@ jobs:
     - name: Build everything and verify
       run: |
         ./dist.release.bat
+
+    - name: Upload installers
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: PHPManagerForIIS-installers
+        path: |
+          PHPManagerForIIS_x86.msi
+          PHPManagerForIIS_x64.msi
+        if-no-files-found: warn
