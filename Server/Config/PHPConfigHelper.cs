@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using Web.Management.PHP.DefaultDocument;
 using Web.Management.PHP.FastCgi;
@@ -365,17 +364,10 @@ namespace Web.Management.PHP.Config
 
         private static Version ExtractVersion(string versionAsIs)
         {
-            Version result = null;
-
-            var r = new Regex(@"^(?<version>\d+\.\d+\.\d+(?:\.\d+)?).*");
-            var m = r.Match(versionAsIs);
-            if (m.Success)
-            {
-                var version = r.Match(versionAsIs).Result("${version}");
-                result = new Version(version);
-            }
-
-            return result;
+            // The registry keys are looked up by x.y.z, so a version without
+            // the build component is of no use to the callers.
+            var version = PHPVersionParser.ParsePhpVersion(versionAsIs);
+            return version != null && version.Build >= 0 ? version : null;
         }
 
         private static string GenerateHandlerName(HandlersCollection collection, string phpVersion)
@@ -905,20 +897,23 @@ namespace Web.Management.PHP.Config
                     new PHPIniExtension("php_soap.dll", true),
                 };
 
-            if (new Version(version) < new Version("7.0"))
+            // The version can have a suffix (like "7.4.33-pl3"). If it cannot be parsed
+            // at all, the version specific extensions are left alone.
+            var phpVersion = PHPVersionParser.ParsePhpVersion(version);
+            if (phpVersion != null && phpVersion < new Version("7.0"))
             {
                 // IMPORTANT: keep obsolete setting in old release.
                 extensions.Add(new PHPIniExtension("php_mysql.dll", true));
             }
 
-            if (new Version(version) < new Version("8.0"))
+            if (phpVersion != null && phpVersion < new Version("8.0"))
             {
                 // IMPORTANT: keep obsolete setting in old release.
                 extensions.Add(new PHPIniExtension("php_xmlrpc.dll", true));
                 extensions.Add(new PHPIniExtension("php_gd2.dll", true));
             }
 
-            if (new Version(version) >= new Version("8.0"))
+            if (phpVersion != null && phpVersion >= new Version("8.0"))
             {
                 extensions.Add(new PHPIniExtension("php_gd.dll", true));
             }
@@ -1683,7 +1678,14 @@ namespace Web.Management.PHP.Config
                 { "8.2", new PhpVersion("8.2", new DateTime(2025, 12, 8), new Version(14, 21)) },
             };
 
-            var detected = new Version(info.Version);
+            var detected = PHPVersionParser.ParsePhpVersion(info.Version);
+            if (detected == null)
+            {
+                // Unknown version is treated the same way as an unlisted one below.
+                info.IsObsoleteRelease = true;
+                return;
+            }
+
             var key = string.Format("{0}.{1}", detected.Major, detected.Minor);
             var matched = knownPhpVersions.ContainsKey(key) ? knownPhpVersions[key] : null;
             if (matched == null)

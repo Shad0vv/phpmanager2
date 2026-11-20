@@ -133,7 +133,8 @@ namespace Web.Management.PHP.Settings
                 settingValues = _settingsProdValues;
             }
 
-            var php7 = new Version(Module.Proxy.GetPHPConfigInfo().Version) >= new Version("7.2");
+            var phpVersion = PHPVersionParser.ParsePhpVersion(Module.Proxy.GetPHPConfigInfo().Version);
+            var php7 = phpVersion != null && phpVersion >= new Version("7.2");
             var settings = new RemoteObjectCollection<PHPIniSetting>();
             for (int i = 0; i < settingValues.Length; i++)
             {
@@ -494,7 +495,8 @@ namespace Web.Management.PHP.Settings
                 }
 
                 int i = 1;
-                var php7 = new Version(Module.Proxy.GetPHPConfigInfo().Version) >= new Version("7.2");
+                var phpVersion = PHPVersionParser.ParsePhpVersion(Module.Proxy.GetPHPConfigInfo().Version);
+                var php7 = phpVersion != null && phpVersion >= new Version("7.2");
                 while (_errorReportingPreset != ErrorReportingPreset.Undefined && i < _settingNames.Length)
                 {
                     if (php7 && _settingNames[i] == "track_errors")

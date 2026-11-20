@@ -70,6 +70,9 @@
     <Compile Include="..\Client\Config\PHPVersion.cs">
       <Link>Config\PHPVersion.cs</Link>
     </Compile>
+    <Compile Include="..\Client\Config\PHPVersionParser.cs">
+      <Link>Config\PHPVersionParser.cs</Link>
+    </Compile>
     <Compile Include="..\Client\RemoteObject.cs">
       <Link>RemoteObject.cs</Link>
     </Compile>
